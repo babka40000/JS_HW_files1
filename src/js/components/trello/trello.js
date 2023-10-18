@@ -81,10 +81,10 @@ export default class Trello {
 
       const PanelCardDelete = panelCard.querySelector('.panel-card-delete');
       PanelCardDelete.textContent = 'X';
-      PanelCardDelete.addEventListener('click', this.PanelCardDeleteEvent);
+      PanelCardDelete.addEventListener('click', Trello.PanelCardDeleteEvent);
 
       column.appendChild(panelCard);
-      PanelCardText.addEventListener('mousedown', Trello.panelCardMouseDownEvent);
+      PanelCardText.addEventListener('mousedown', this.panelCardMouseDownEvent);
     }
   }
 
