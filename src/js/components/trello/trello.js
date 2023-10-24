@@ -11,6 +11,8 @@ export default class Trello {
     this.panelCardMouseDownEvent = this.panelCardMouseDownEvent.bind(this);
     this.panelCardMouseUpEvent = this.panelCardMouseUpEvent.bind(this);
     this.panelCardMouseOverEvent = this.panelCardMouseOverEvent.bind(this);
+    this.panelCardMouseMoveEvent = this.panelCardMouseMoveEvent.bind(this);
+    // this.panelCardMouseOutEvent = this.panelCardMouseOutEvent.bind(this);
   }
 
   static get getHTML() {
@@ -62,7 +64,7 @@ export default class Trello {
     }
   }
 
-  static PanelCardDeleteEvent(e) {
+  static panelCardDeleteEvent(e) {
     e.target.parentElement.remove();
   }
 
@@ -76,46 +78,79 @@ export default class Trello {
                              <div class='panel-card-delete'>
                              </div>`;
 
-      const PanelCardText = panelCard.querySelector('.panel-card-text');
-      PanelCardText.textContent = addText;
+      const panelCardText = panelCard.querySelector('.panel-card-text');
+      panelCardText.textContent = addText;
 
-      const PanelCardDelete = panelCard.querySelector('.panel-card-delete');
-      PanelCardDelete.textContent = 'X';
-      PanelCardDelete.addEventListener('click', Trello.PanelCardDeleteEvent);
+      const panelCardDelete = panelCard.querySelector('.panel-card-delete');
+      panelCardDelete.textContent = 'X';
 
       column.appendChild(panelCard);
-      PanelCardText.addEventListener('mousedown', this.panelCardMouseDownEvent);
+      panelCard.addEventListener('mousedown', this.panelCardMouseDownEvent);
+      panelCard.addEventListener('mouseover', this.panelCardMouseOverEvent);
     }
   }
 
   panelCardMouseDownEvent(e) {
     e.preventDefault();
 
-    this.actualElement = e.target.parentElement;
+    if (e.target.classList.contains('panel-card')) {
+      this.actualElement = e.target;
+    } else if (e.target.classList.contains('panel-card-delete')) {
+      Trello.panelCardDeleteEvent(e);
+      return;
+    } else {
+      this.actualElement = e.target.parentElement;
+    }
+
+    const currentWidth = this.actualElement.offsetWidth;
 
     this.actualElement.classList.add('active-drag');
 
+    this.actualElement.style.width = `${currentWidth}px`;
+
+    this.actualElement.style.top = `${e.clientY}px`;
+    this.actualElement.style.left = `${e.clientX}px`;
+
     document.documentElement.addEventListener('mouseup', this.panelCardMouseUpEvent);
-    document.documentElement.addEventListener('mouseover', this.panelCardMouseOverEvent);
+    document.documentElement.addEventListener('mousemove', this.panelCardMouseMoveEvent);
   }
 
   panelCardMouseUpEvent(e) {
     e.preventDefault();
 
     const mouseUpItem = e.target;
-    mouseUpItem.appendChild(this.actualElement);
+
+    if (mouseUpItem.classList.contains('column')) {
+      mouseUpItem.appendChild(this.actualElement);
+    } else {
+      mouseUpItem.after(this.actualElement);
+    }
 
     this.actualElement.classList.remove('active-drag');
 
     document.documentElement.removeEventListener('mouseup', this.panelCardMouseUpEvent);
-    document.documentElement.removeEventListener('mouseover', this.panelCardMouseOverEvent);
+    document.documentElement.removeEventListener('mousemove', this.panelCardMouseMoveEvent);
 
     this.actualElement = undefined;
+
+    const emptyElements = document.querySelectorAll('.empty-block');
+    for (const emptyElement of emptyElements) {
+      emptyElement.remove();
+    }
+  }
+
+  panelCardMouseMoveEvent(e) {
+    this.actualElement.style.top = `${e.clientY}px`;
+    this.actualElement.style.left = `${e.clientX}px`;
   }
 
   panelCardMouseOverEvent(e) {
-    this.actualElement.style.top = `${e.clientY}px`;
-    this.actualElement.style.left = `${e.clientX}px`;
+    if (this.actualElement !== undefined) {
+      const emptyBlock = document.createElement('div');
+      emptyBlock.classList.add('empty-block');
+      emptyBlock.style.height = `${this.actualElement.offsetHeight}px`;
+      e.target.before(emptyBlock);
+    }
   }
 
   addCardDoneEvent(e) {
