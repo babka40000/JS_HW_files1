@@ -4,6 +4,7 @@ export default class Trello {
     this.newCard = undefined;
     this.columnNubmer = 0;
     this.actualElement = undefined;
+    this.movemove = true;
 
     this.addCardHrefClick = this.addCardHrefClick.bind(this);
     this.addCard = this.addCard.bind(this);
@@ -137,6 +138,8 @@ export default class Trello {
     for (const emptyElement of emptyElements) {
       emptyElement.remove();
     }
+
+    this.movemove = true;
   }
 
   panelCardMouseMoveEvent(e) {
@@ -145,11 +148,21 @@ export default class Trello {
   }
 
   panelCardMouseOverEvent(e) {
-    if (this.actualElement !== undefined) {
+    if ((this.actualElement !== undefined) && this.movemove) {
+      this.movemove = false;
       const emptyBlock = document.createElement('div');
       emptyBlock.classList.add('empty-block');
       emptyBlock.style.height = `${this.actualElement.offsetHeight}px`;
-      e.target.before(emptyBlock);
+
+      let target;
+
+      if (e.target.classList.contains('panel-card')) {
+        target = e.target;
+      } else {
+        target = e.target.parentElement;
+      }
+
+      target.before(emptyBlock);
     }
   }
 
