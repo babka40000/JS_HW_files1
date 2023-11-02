@@ -4,7 +4,7 @@ export default class Trello {
     this.newCard = undefined;
     this.columnNubmer = 0;
     this.actualElement = undefined;
-    this.movemove = true;
+    this.movemove = false;
 
     this.addCardHrefClick = this.addCardHrefClick.bind(this);
     this.addCard = this.addCard.bind(this);
@@ -13,7 +13,7 @@ export default class Trello {
     this.panelCardMouseUpEvent = this.panelCardMouseUpEvent.bind(this);
     this.panelCardMouseOverEvent = this.panelCardMouseOverEvent.bind(this);
     this.panelCardMouseMoveEvent = this.panelCardMouseMoveEvent.bind(this);
-    // this.panelCardMouseOutEvent = this.panelCardMouseOutEvent.bind(this);
+    this.panelCardMouseOutEvent = this.panelCardMouseOutEvent.bind(this);
   }
 
   static get getHTML() {
@@ -88,6 +88,7 @@ export default class Trello {
       column.appendChild(panelCard);
       panelCard.addEventListener('mousedown', this.panelCardMouseDownEvent);
       panelCard.addEventListener('mouseover', this.panelCardMouseOverEvent);
+      panelCard.addEventListener('mouseout', this.panelCardMouseOutEvent);
     }
   }
 
@@ -114,6 +115,19 @@ export default class Trello {
 
     document.documentElement.addEventListener('mouseup', this.panelCardMouseUpEvent);
     document.documentElement.addEventListener('mousemove', this.panelCardMouseMoveEvent);
+
+    this.movemove = true;
+  }
+
+  panelCardMouseOutEvent(e) {
+    if (this.movemove) {
+      if (e.relatedTarget.classList.contains('column')) {
+        const emptyElements = document.querySelectorAll('.empty-block');
+        for (const emptyElement of emptyElements) {
+          emptyElement.remove();
+        }
+      }
+    }
   }
 
   panelCardMouseUpEvent(e) {
@@ -139,7 +153,7 @@ export default class Trello {
       emptyElement.remove();
     }
 
-    this.movemove = true;
+    this.movemove = false;
   }
 
   panelCardMouseMoveEvent(e) {
@@ -148,8 +162,12 @@ export default class Trello {
   }
 
   panelCardMouseOverEvent(e) {
-    if ((this.actualElement !== undefined) && this.movemove) {
-      this.movemove = false;
+    const emptyElements = document.querySelectorAll('.empty-block');
+    for (const emptyElement of emptyElements) {
+      emptyElement.remove();
+    }
+
+    if ((this.actualElement !== undefined)) {
       const emptyBlock = document.createElement('div');
       emptyBlock.classList.add('empty-block');
       emptyBlock.style.height = `${this.actualElement.offsetHeight}px`;
@@ -163,6 +181,14 @@ export default class Trello {
       }
 
       target.before(emptyBlock);
+
+      emptyBlock.addEventListener('mouseout', () => {
+        if (this.movemove) {
+          if (e.relatedTarget.classList.contains('column')) {
+            emptyBlock.remove();
+          }
+        }
+      });
     }
   }
 
